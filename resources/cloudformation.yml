@@ -2,17 +2,17 @@ AWSTemplateFormatVersion: '2010-09-09'
 
 Parameters:
   AMI:
-    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    Type: String
+    Default: ami-0b74f796d330ab49c
   InstanceType:
     Type: String
     Default: t2.micro
   GitHubUsername:
     Type: String
-    Default: YOUR_GITHUB_USERNAME
+    Default: laptar-ls
   GitHubRepoName:
     Type: String
-    Default: YOUR_REPO_NAME
+    Default: prjctr-aws
   Subnet1:
     Type: AWS::EC2::Subnet::Id
     Default: subnet-07a49735496e5a18b
