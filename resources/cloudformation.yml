@@ -95,10 +95,6 @@ Resources:
       Targets:
         - Id: !Ref EC2One
         - Id: !Ref EC2Two
-      HealthCheck:
-        Path: /
-        Port: 3000
-        Protocol: HTTP
 
   Listener:
     Type: AWS::ElasticLoadBalancingV2::Listener
