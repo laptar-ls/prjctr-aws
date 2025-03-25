@@ -23,5 +23,5 @@ jobs:
         run: |
           aws cloudformation deploy \
             --stack-name ec2-stack \
-            --template-file cloudformation.yml \
+            --template-file resources/cloudformation.yml \
             --capabilities CAPABILITY_NAMED_IAM
