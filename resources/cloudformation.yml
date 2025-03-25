@@ -1,12 +1,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Resources:
-  MyEC2Instance1:
+  EC2One:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: ami-0b74f796d330ab49c
       InstanceType: t2.micro
       SecurityGroupIds:
-        - !Ref MySecurityGroup
+        - !Ref SecurityGroup
       UserData:
         Fn::Base64: |
           #!/bin/bash
@@ -17,13 +17,13 @@ Resources:
           npm install
           node server.js > server.log 2>&1 &
 
-  MyEC2Instance2:
+  EC2Two:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: ami-0b74f796d330ab49c
       InstanceType: t2.micro
       SecurityGroupIds:
-        - !Ref MySecurityGroup
+        - !Ref SecurityGroup
       UserData:
         Fn::Base64: |
           #!/bin/bash
@@ -34,7 +34,7 @@ Resources:
           npm install
           node server.js > server.log 2>&1 &
 
-  MySecurityGroup:
+  SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow HTTP
@@ -44,7 +44,7 @@ Resources:
           ToPort: 80
           CidrIp: 0.0.0.0/0
 
-  MyLoadBalancer:
+  LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Name: MyALB
@@ -53,10 +53,10 @@ Resources:
         - subnet-0aba2dfb95814920f
         - subnet-0712214530bc7d4b1
       SecurityGroups:
-        - !Ref MySecurityGroup
+        - !Ref SecurityGroup
       Scheme: internet-facing
 
-  MyTargetGroup:
+  TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       Port: 3000
@@ -64,15 +64,15 @@ Resources:
       VpcId: vpc-07abf5cb2f6a05900
       TargetType: instance
       Targets:
-        - Id: !Ref MyEC2Instance1
-        - Id: !Ref MyEC2Instance2
+        - Id: !Ref EC2One
+        - Id: !Ref EC2Two
 
-  MyListener:
+  Listener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-      LoadBalancerArn: !Ref MyLoadBalancer
+      LoadBalancerArn: !Ref LoadBalancer
       Protocol: HTTP
       Port: 80
       DefaultActions:
         - Type: forward
-          TargetGroupArn: !Ref MyTargetGroup
+          TargetGroupArn: !Ref TargetGroup
