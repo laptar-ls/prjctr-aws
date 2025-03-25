@@ -2,17 +2,17 @@ AWSTemplateFormatVersion: '2010-09-09'
 
 Parameters:
   AMI:
-    Type: String
-    Default: ami-0b74f796d330ab49c
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
   InstanceType:
     Type: String
     Default: t2.micro
   GitHubUsername:
     Type: String
-    Default: laptar-ls
+    Default: YOUR_GITHUB_USERNAME
   GitHubRepoName:
     Type: String
-    Default: prjctr-aws
+    Default: YOUR_REPO_NAME
   Subnet1:
     Type: AWS::EC2::Subnet::Id
     Default: subnet-07a49735496e5a18b
@@ -27,10 +27,24 @@ Parameters:
     Default: vpc-07abf5cb2f6a05900
 
 Resources:
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for ALB
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow HTTP
+      GroupDescription: Allow HTTP and traffic from ALB
       VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -40,6 +54,9 @@ Resources:
         - IpProtocol: tcp
           FromPort: 3000
           ToPort: 3000
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+      SecurityGroupEgress:
+        - IpProtocol: -1
           CidrIp: 0.0.0.0/0
 
   EC2One:
@@ -87,7 +104,7 @@ Resources:
         - !Ref Subnet2
         - !Ref Subnet3
       SecurityGroups:
-        - !Ref SecurityGroup
+        - !Ref LoadBalancerSecurityGroup
       Scheme: internet-facing
 
   TargetGroup:
