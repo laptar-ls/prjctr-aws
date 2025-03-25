@@ -100,15 +100,15 @@ Resources:
   TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      Port: 3000
+      Port: 80
       Protocol: HTTP
       VpcId: !Ref VpcId
       TargetType: instance
       Targets:
         - Id: !Ref NodeInstance1
-          Port: 3000
+          Port: 80
         - Id: !Ref NodeInstance2
-          Port: 3000
+          Port: 80
 
   Listener:
     Type: AWS::ElasticLoadBalancingV2::Listener
