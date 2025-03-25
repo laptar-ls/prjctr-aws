@@ -3,7 +3,7 @@ Resources:
   MyEC2Instance1:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: ami-0c55b159cbfafe1f0
+      ImageId: ami-0b74f796d330ab49c
       InstanceType: t2.micro
       SecurityGroupIds:
         - !Ref MySecurityGroup
@@ -20,7 +20,7 @@ Resources:
   MyEC2Instance2:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: ami-0c55b159cbfafe1f0
+      ImageId: ami-0b74f796d330ab49c
       InstanceType: t2.micro
       SecurityGroupIds:
         - !Ref MySecurityGroup
