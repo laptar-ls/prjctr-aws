@@ -54,8 +54,12 @@ Resources:
           #!/bin/bash
           yum update -y
           yum install -y nodejs git
-          git clone https://github.com/${GitHubUsername}/${GitHubRepoName}.git /home/ec2-user/app
-          cd /home/ec2-user/app
+          git clone --no-checkout https://github.com/${GitHubUsername}/${GitHubRepoName}.git /home/ec2-user/app_repo
+          cd /home/ec2-user/app_repo
+          git sparse-checkout init
+          git sparse-checkout set app
+          git checkout main
+          cd /home/ec2-user/app_repo/app
           npm install
           node server.js > server.log 2>&1 &
           echo "Node.js app started" >> server.log
@@ -73,8 +77,12 @@ Resources:
           #!/bin/bash
           yum update -y
           yum install -y nodejs git
-          git clone https://github.com/${GitHubUsername}/${GitHubRepoName}.git /home/ec2-user/app
-          cd /home/ec2-user/app
+          git clone --no-checkout https://github.com/${GitHubUsername}/${GitHubRepoName}.git /home/ec2-user/app_repo
+          cd /home/ec2-user/app_repo
+          git sparse-checkout init
+          git sparse-checkout set app
+          git checkout main
+          cd /home/ec2-user/app_repo/app
           npm install
           node server.js > server.log 2>&1 &
           echo "Node.js app started" >> server.log
