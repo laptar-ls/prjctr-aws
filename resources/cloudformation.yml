@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  MyEC2Instance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0c55b159cbfafe1f0
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - !Ref MySecurityGroup
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          yum update -y
+          yum install -y nodejs git
+          git clone https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME.git /home/ec2-user/app
+          cd /home/ec2-user/app
+          npm install
+          node server.js > server.log 2>&1 &
+
+  MyEC2Instance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0c55b159cbfafe1f0
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - !Ref MySecurityGroup
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          yum update -y
+          yum install -y nodejs git
+          git clone https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME.git /home/ec2-user/app
+          cd /home/ec2-user/app
+          npm install
+          node server.js > server.log 2>&1 &
+
+  MySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  MyLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: MyALB
+      Subnets:
+        - subnet-07a49735496e5a18b
+        - subnet-0aba2dfb95814920f
+        - subnet-0712214530bc7d4b1
+      SecurityGroups:
+        - !Ref MySecurityGroup
+      Scheme: internet-facing
+
+  MyTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Port: 3000
+      Protocol: HTTP
+      VpcId: vpc-07abf5cb2f6a05900
+      TargetType: instance
+      Targets:
+        - Id: !Ref MyEC2Instance1
+        - Id: !Ref MyEC2Instance2
+
+  MyListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref MyLoadBalancer
+      Protocol: HTTP
+      Port: 80
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref MyTargetGroup
