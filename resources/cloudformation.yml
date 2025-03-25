@@ -1,39 +1,32 @@
 AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  AMI:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+  InstanceType:
+    Type: String
+    Default: t2.micro
+  GitHubUsername:
+    Type: String
+    Default: laptar-ls
+  GitHubRepoName:
+    Type: String
+    Default: prjctr-aws
+  Subnet1:
+    Type: AWS::EC2::Subnet::Id
+    Default: subnet-07a49735496e5a18b
+  Subnet2:
+    Type: AWS::EC2::Subnet::Id
+    Default: subnet-0aba2dfb95814920f
+  Subnet3:
+    Type: AWS::EC2::Subnet::Id
+    Default: subnet-0712214530bc7d4b1
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Default: vpc-07abf5cb2f6a05900
+
 Resources:
-  EC2One:
-    Type: AWS::EC2::Instance
-    Properties:
-      ImageId: ami-0b74f796d330ab49c
-      InstanceType: t2.micro
-      SecurityGroupIds:
-        - !Ref SecurityGroup
-      UserData:
-        Fn::Base64: |
-          #!/bin/bash
-          yum update -y
-          yum install -y nodejs git
-          git clone https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME.git /home/ec2-user/app
-          cd /home/ec2-user/app
-          npm install
-          node server.js > server.log 2>&1 &
-
-  EC2Two:
-    Type: AWS::EC2::Instance
-    Properties:
-      ImageId: ami-0b74f796d330ab49c
-      InstanceType: t2.micro
-      SecurityGroupIds:
-        - !Ref SecurityGroup
-      UserData:
-        Fn::Base64: |
-          #!/bin/bash
-          yum update -y
-          yum install -y nodejs git
-          git clone https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME.git /home/ec2-user/app
-          cd /home/ec2-user/app
-          npm install
-          node server.js > server.log 2>&1 &
-
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -44,14 +37,50 @@ Resources:
           ToPort: 80
           CidrIp: 0.0.0.0/0
 
+  EC2One:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AMI
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds:
+        - !Ref SecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y nodejs git
+          git clone https://github.com/${GitHubUsername}/${GitHubRepoName}.git /home/ec2-user/app
+          cd /home/ec2-user/app
+          npm install
+          node server.js > server.log 2>&1 &
+          echo "Node.js app started" >> server.log
+
+  EC2Two:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AMI
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds:
+        - !Ref SecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y nodejs git
+          git clone https://github.com/${GitHubUsername}/${GitHubRepoName}.git /home/ec2-user/app
+          cd /home/ec2-user/app
+          npm install
+          node server.js > server.log 2>&1 &
+          echo "Node.js app started" >> server.log
+
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Name: MyALB
       Subnets:
-        - subnet-07a49735496e5a18b
-        - subnet-0aba2dfb95814920f
-        - subnet-0712214530bc7d4b1
+        - !Ref Subnet1
+        - !Ref Subnet2
+        - !Ref Subnet3
       SecurityGroups:
         - !Ref SecurityGroup
       Scheme: internet-facing
@@ -61,11 +90,15 @@ Resources:
     Properties:
       Port: 3000
       Protocol: HTTP
-      VpcId: vpc-07abf5cb2f6a05900
+      VpcId: !Ref VpcId
       TargetType: instance
       Targets:
         - Id: !Ref EC2One
         - Id: !Ref EC2Two
+      HealthCheck:
+        Path: /
+        Port: 3000
+        Protocol: HTTP
 
   Listener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -76,3 +109,8 @@ Resources:
       DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref TargetGroup
+
+Outputs:
+  LoadBalancerURL:
+    Description: "The URL of the Load Balancer"
+    Value: !GetAtt LoadBalancer.DNSName
