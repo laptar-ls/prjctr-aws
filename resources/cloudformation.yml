@@ -27,21 +27,7 @@ Parameters:
     Default: vpc-07abf5cb2f6a05900
 
 Resources:
-  NodeSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Enable HTTP access via port 3000
-      VpcId: !Ref VpcId
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 3000
-          ToPort: 3000
-          CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
-
-  LoadBalancerSecurityGroup:
+  SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow HTTP traffic to the load balancer
@@ -61,7 +47,7 @@ Resources:
       ImageId: !Ref AMI
       InstanceType: !Ref InstanceType
       SecurityGroupIds:
-        - !GetAtt NodeSecurityGroup.GroupId
+        - !GetAtt SecurityGroup.GroupId
       SubnetId: !Ref Subnet1
       UserData:
         Fn::Base64: !Sub |
@@ -80,7 +66,7 @@ Resources:
       ImageId: !Ref AMI
       InstanceType: !Ref InstanceType
       SecurityGroupIds:
-        - !GetAtt NodeSecurityGroup.GroupId
+        - !GetAtt SecurityGroup.GroupId
       SubnetId: !Ref Subnet2
       UserData:
         Fn::Base64: !Sub |
@@ -100,7 +86,7 @@ Resources:
         - !Ref Subnet1
         - !Ref Subnet2
       SecurityGroups:
-        - !GetAtt LoadBalancerSecurityGroup.GroupId
+        - !GetAtt SecurityGroup.GroupId
       Scheme: internet-facing
 
   TargetGroup:
