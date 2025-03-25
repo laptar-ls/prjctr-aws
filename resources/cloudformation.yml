@@ -27,37 +27,20 @@ Parameters:
     Default: vpc-07abf5cb2f6a05900
 
 Resources:
-  LoadBalancerSecurityGroup:
+  SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Security group for ALB
+      GroupDescription: Allow HTTP
       VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-        - IpProtocol: -1
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
           CidrIp: 0.0.0.0/0
-
-    SecurityGroup:
-      Type: AWS::EC2::SecurityGroup
-      Properties:
-        GroupDescription: Allow HTTP and traffic from ALB
-        VpcId: !Ref VpcId
-        SecurityGroupIngress:
-          - IpProtocol: tcp
-            FromPort: 80
-            ToPort: 80
-            CidrIp: 0.0.0.0/0
-          - IpProtocol: tcp
-            FromPort: 3000
-            ToPort: 3000
-            SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
-        SecurityGroupEgress:
-          - IpProtocol: -1
-            CidrIp: 0.0.0.0/0
 
   EC2One:
     Type: AWS::EC2::Instance
@@ -104,7 +87,7 @@ Resources:
         - !Ref Subnet2
         - !Ref Subnet3
       SecurityGroups:
-        - !Ref LoadBalancerSecurityGroup
+        - !Ref SecurityGroup
       Scheme: internet-facing
 
   TargetGroup:
