@@ -27,45 +27,42 @@ Parameters:
     Default: vpc-07abf5cb2f6a05900
 
 Resources:
-  LoadBalancerSecurityGroup:
+  NodeSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Security group for ALB
+      GroupDescription: Enable HTTP access via port 3000
       VpcId: !Ref VpcId
       SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
-
-  SecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Allow HTTP and traffic from ALB
-      VpcId: !Ref VpcId
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 3000
           ToPort: 3000
-          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
 
-  EC2One:
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP traffic to the load balancer
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  NodeInstance1:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: !Ref AMI
       InstanceType: !Ref InstanceType
       SecurityGroupIds:
-        - !Ref SecurityGroup
+        - !GetAtt NodeSecurityGroup.GroupId
+      SubnetId: !Ref Subnet1
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -77,13 +74,14 @@ Resources:
           node server.js > server.log 2>&1 &
           echo "Node.js app started" >> server.log
 
-  EC2Two:
+  NodeInstance2:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: !Ref AMI
       InstanceType: !Ref InstanceType
       SecurityGroupIds:
-        - !Ref SecurityGroup
+        - !GetAtt NodeSecurityGroup.GroupId
+      SubnetId: !Ref Subnet2
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -98,13 +96,11 @@ Resources:
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Name: MyALB
       Subnets:
         - !Ref Subnet1
         - !Ref Subnet2
-        - !Ref Subnet3
       SecurityGroups:
-        - !Ref LoadBalancerSecurityGroup
+        - !GetAtt LoadBalancerSecurityGroup.GroupId
       Scheme: internet-facing
 
   TargetGroup:
@@ -115,8 +111,10 @@ Resources:
       VpcId: !Ref VpcId
       TargetType: instance
       Targets:
-        - Id: !Ref EC2One
-        - Id: !Ref EC2Two
+        - Id: !Ref NodeInstance1
+          Port: 3000
+        - Id: !Ref NodeInstance2
+          Port: 3000
 
   Listener:
     Type: AWS::ElasticLoadBalancingV2::Listener

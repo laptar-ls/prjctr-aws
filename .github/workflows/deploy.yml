@@ -22,6 +22,6 @@ jobs:
       - name: Deploy CloudFormation Stack
         run: |
           aws cloudformation deploy \
-            --stack-name ec2-stack \
+            --stack-name prjctr-stack \
             --template-file resources/cloudformation.yml \
             --capabilities CAPABILITY_NAMED_IAM
